@@ -1,0 +1,26 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="App-content">
+    <div class="ToggleBot-message">
+        "@Model.Message"
+    </div>
+    <img
+        src="@Model.TogglebotSrc"
+        class="ToggleBot-logo spin-@Model.Speed"
+        alt="togglebot"
+    />
+    <div class="ToggleBot-variation">
+        Serving Variation: <b>"@Model.VariationName"</b>
+    </div>
+</div>
+
+<div class="App-description">
+    <div>
+      <h3>@Model.Header</h3>
+      <p>@Model.Body</p>
+    </div>
+</div>
