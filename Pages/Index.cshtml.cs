@@ -60,7 +60,7 @@ public class IndexModel : PageModel
                 break;
         }
 
-        TogglebotSrc = Wink ? "/images/togglebot-wink.png" : "/images/togglebot.png";
+        TogglebotSrc = Wink ? "/images/togglebot-wink.svg" : "/images/togglebot.svg";
         if (Speed == "surprise")
         {
             TogglebotSrc = "/images/unicorn.svg";
