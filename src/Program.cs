@@ -3,9 +3,13 @@ namespace HelloTogglebot
     using System;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     using DevCycle.SDK.Server.Local.Api;
     using DevCycle.SDK.Server.Common.Model;
+    using OpenTelemetry;
+    using OpenTelemetry.Resources;
+    using OpenTelemetry.Trace;
 
     public class Program
     {
@@ -21,6 +25,48 @@ namespace HelloTogglebot
 
             // Add services to the container.
             builder.Services.AddRazorPages();
+            builder.Services.AddControllers();
+
+            // Configure OpenTelemetry with Dynatrace
+            if (DynatraceConfiguration.IsConfigured)
+            {
+                Console.WriteLine($"Dynatrace configured - Service: {DynatraceConfiguration.ServiceName}, Endpoint: {DynatraceConfiguration.GetOtlpEndpoint()}");
+
+                builder.Services.AddOpenTelemetry()
+                    .ConfigureResource(resource => resource
+                        .AddService(
+                            serviceName: DynatraceConfiguration.ServiceName,
+                            serviceVersion: DynatraceConfiguration.ServiceVersion))
+                    .WithTracing(tracing => tracing
+                        .AddSource("HelloTogglebot.Pages")
+                        .AddSource("HelloTogglebot.Test")
+                        .SetSampler(new AlwaysOnSampler())
+                        .AddAspNetCoreInstrumentation(options =>
+                        {
+                            options.RecordException = true;
+                        })
+                        .AddHttpClientInstrumentation()
+                        .AddConsoleExporter()
+                        .AddOtlpExporter(options =>
+                        {
+                            options.Endpoint = new Uri(DynatraceConfiguration.GetOtlpEndpoint());
+                            options.Headers = string.Join(",",
+                                DynatraceConfiguration.GetHeaders()
+                                    .Select(kvp => $"{kvp.Key}={kvp.Value}"));
+                            options.TimeoutMilliseconds = 5000;
+                            Console.WriteLine($"OTLP Exporter configured - Endpoint: {options.Endpoint}, Headers: {options.Headers}");
+                        }));
+
+                builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Debug);
+
+                // Enable OpenTelemetry internal logging
+                builder.Logging.AddFilter("OpenTelemetry", LogLevel.Debug);
+                builder.Logging.AddFilter("System.Net.Http", LogLevel.Debug);
+            }
+            else
+            {
+                Console.WriteLine("Dynatrace configuration not found. Tracing disabled.");
+            }
 
             var app = builder.Build();
 
@@ -40,6 +86,7 @@ namespace HelloTogglebot
             app.UseAuthorization();
 
             app.MapRazorPages();
+            app.MapControllers();
 
             app.Use(async (context, next) =>
             {
@@ -49,8 +96,16 @@ namespace HelloTogglebot
 
                 await next();
             });
-            
+
             VariationLogger.Start();
+
+            // Ensure spans are flushed on shutdown
+            var lifetime = app.Services.GetRequiredService<Microsoft.Extensions.Hosting.IHostApplicationLifetime>();
+            lifetime.ApplicationStopping.Register(() =>
+            {
+                Console.WriteLine("Flushing OpenTelemetry spans...");
+                app.Services.GetService<TracerProvider>()?.ForceFlush(5000);
+            });
 
             app.Run();
         }

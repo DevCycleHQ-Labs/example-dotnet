@@ -8,7 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevCycle.SDK.Server.Local" Version="4.0.4" />
+	<ProjectReference Include="..\..\hq\dotnet-server-sdk\DevCycle.SDK.Server.Common\DevCycle.SDK.Server.Common.csproj" />
+	<ProjectReference Include="..\..\hq\dotnet-server-sdk\DevCycle.SDK.Server.Cloud\DevCycle.SDK.Server.Cloud.csproj" />
+        <ProjectReference Include="..\..\hq\dotnet-server-sdk\DevCycle.SDK.Server.Local\DevCycle.SDK.Server.Local.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
   </ItemGroup>
 
 </Project>
