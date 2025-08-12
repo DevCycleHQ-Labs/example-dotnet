@@ -7,9 +7,16 @@ namespace HelloTogglebot
 
     using DevCycle.SDK.Server.Local.Api;
     using DevCycle.SDK.Server.Common.Model;
+
     using OpenTelemetry;
-    using OpenTelemetry.Resources;
     using OpenTelemetry.Trace;
+    using OpenTelemetry.Exporter;
+    using OpenTelemetry.Metrics;
+    using OpenTelemetry.Logs;
+    using OpenTelemetry.Resources;
+    using OpenTelemetry.Context.Propagation;
+    using System.Diagnostics;
+    using System.Diagnostics.Metrics;
 
     public class Program
     {
@@ -50,6 +57,7 @@ namespace HelloTogglebot
                         .AddOtlpExporter(options =>
                         {
                             options.Endpoint = new Uri(DynatraceConfiguration.GetOtlpEndpoint());
+                            options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
                             options.Headers = string.Join(",",
                                 DynatraceConfiguration.GetHeaders()
                                     .Select(kvp => $"{kvp.Key}={kvp.Value}"));
