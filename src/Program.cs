@@ -17,6 +17,7 @@ namespace HelloTogglebot
     using OpenTelemetry.Context.Propagation;
     using System.Diagnostics;
     using System.Diagnostics.Metrics;
+    using Dynatrace.OneAgent.Sdk.Api;
 
     public class Program
     {
@@ -34,6 +35,11 @@ namespace HelloTogglebot
             builder.Services.AddRazorPages();
             builder.Services.AddControllers();
 
+            // Initialize OneAgent SDK
+            var oneAgentSdk = OneAgentSdkFactory.CreateInstance();
+            builder.Services.AddSingleton<IOneAgentSdk>(oneAgentSdk);
+            Console.WriteLine($"OneAgent SDK initialized - State: {oneAgentSdk.CurrentState}");
+
             // Configure OpenTelemetry with Dynatrace
             if (DynatraceConfiguration.IsConfigured)
             {
@@ -47,10 +53,21 @@ namespace HelloTogglebot
                     .WithTracing(tracing => tracing
                         .AddSource("HelloTogglebot.Pages")
                         .AddSource("HelloTogglebot.Test")
-                        .SetSampler(new AlwaysOnSampler())
                         .AddAspNetCoreInstrumentation(options =>
                         {
                             options.RecordException = true;
+                            options.Filter = (httpContext) =>
+                            {
+                                // Skip health check endpoints and static files
+                                var path = httpContext.Request.Path.Value?.ToLower();
+                                var shouldTrace = !(path?.StartsWith("/health") == true ||
+                                        path?.StartsWith("/favicon") == true ||
+                                        path?.StartsWith("/css") == true ||
+                                        path?.StartsWith("/js") == true ||
+                                        path?.StartsWith("/images") == true);
+                                Console.WriteLine($"Tracing filter - Path: {path}, ShouldTrace: {shouldTrace}");
+                                return shouldTrace;
+                            };
                         })
                         .AddHttpClientInstrumentation()
                         .AddConsoleExporter()
@@ -65,11 +82,6 @@ namespace HelloTogglebot
                             Console.WriteLine($"OTLP Exporter configured - Endpoint: {options.Endpoint}, Headers: {options.Headers}");
                         }));
 
-                builder.Logging.AddConsole().SetMinimumLevel(LogLevel.Debug);
-
-                // Enable OpenTelemetry internal logging
-                builder.Logging.AddFilter("OpenTelemetry", LogLevel.Debug);
-                builder.Logging.AddFilter("System.Net.Http", LogLevel.Debug);
             }
             else
             {

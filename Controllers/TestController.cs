@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using OpenTelemetry.Trace;
+using Dynatrace.OneAgent.Sdk.Api;
 
 namespace HelloTogglebot.Controllers;
 
@@ -46,6 +47,19 @@ public class TestController : ControllerBase
         {
             message = "Traces flushed",
             success = result,
+            timestamp = DateTimeOffset.UtcNow
+        });
+    }
+
+    [HttpGet("oneagent")]
+    public IActionResult TestOneAgent([FromServices] IOneAgentSdk oneAgent)
+    {
+        _logger.LogInformation("OneAgent SDK test endpoint called - State: {State}", oneAgent.CurrentState);
+
+        return Ok(new
+        {
+            message = "OneAgent SDK available",
+            sdkState = oneAgent.CurrentState.ToString(),
             timestamp = DateTimeOffset.UtcNow
         });
     }

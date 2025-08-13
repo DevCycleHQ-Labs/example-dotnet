@@ -1,0 +1,35 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Environment files (will be mounted separately)
+.env
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
