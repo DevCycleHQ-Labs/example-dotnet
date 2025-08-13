@@ -19,6 +19,8 @@ namespace HelloTogglebot
     using System.Diagnostics.Metrics;
     using Dynatrace.OneAgent.Sdk.Api;
 
+    using HelloTogglebot.Hooks;
+
     public class Program
     {
         static async Task Main(string[] args)
@@ -40,6 +42,8 @@ namespace HelloTogglebot
             builder.Services.AddSingleton<IOneAgentSdk>(oneAgentSdk);
             Console.WriteLine($"OneAgent SDK initialized - State: {oneAgentSdk.CurrentState}");
 
+            var client = DevCycleClient.GetClient();
+            client.AddEvalHook(new DynatraceSpanHook(oneAgentSdk));
             // Configure OpenTelemetry with Dynatrace
             if (DynatraceConfiguration.IsConfigured)
             {

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using OpenTelemetry.Trace;
 using Dynatrace.OneAgent.Sdk.Api;
+using DevCycle.SDK.Server.Common.Model;
 
 namespace HelloTogglebot.Controllers;
 
@@ -52,15 +53,20 @@ public class TestController : ControllerBase
     }
 
     [HttpGet("oneagent")]
-    public IActionResult TestOneAgent([FromServices] IOneAgentSdk oneAgent)
+    public async Task<IActionResult> TestOneAgentAsync([FromServices] IOneAgentSdk oneAgent)
     {
         _logger.LogInformation("OneAgent SDK test endpoint called - State: {State}", oneAgent.CurrentState);
+
+        var client = DevCycleClient.GetClient();
+        var user = new DevCycleUser("userId");
+        var variable = await client.VariableAsync(user, "test", false);
 
         return Ok(new
         {
             message = "OneAgent SDK available",
             sdkState = oneAgent.CurrentState.ToString(),
-            timestamp = DateTimeOffset.UtcNow
+            timestamp = DateTimeOffset.UtcNow,
+            variable = variable
         });
     }
 
