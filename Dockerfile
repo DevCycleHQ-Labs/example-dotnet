@@ -19,7 +19,7 @@ WORKDIR /app
 # Copy the published application
 COPY --from=build /app/out .
 
-# Create a non-root user
+# Create a non-root user and set permissions
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
 

@@ -2,12 +2,19 @@ version: '3.8'
 
 services:
   hellotogglebot:
-    build: .
+    platform: linux/amd64  # Add this line
+    build:
+      context: .
+      args:
+        - DT_TENANT=${DT_TENANT}
+        - DT_API_TOKEN=${DYNATRACE_API_TOKEN}
     ports:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      # Dynatrace OneAgent environment variables
+      - DT_API_TOKEN=${DYNATRACE_API_TOKEN}
     env_file:
       - .env
     restart: unless-stopped
