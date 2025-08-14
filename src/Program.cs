@@ -44,6 +44,7 @@ namespace HelloTogglebot
 
             var client = DevCycleClient.GetClient();
             client.AddEvalHook(new DynatraceSpanHook(oneAgentSdk));
+            client.AddEvalHook(new ActivityHook(new ActivitySource("HelloPaulTest")));
             // Configure OpenTelemetry with Dynatrace
             if (DynatraceConfiguration.IsConfigured)
             {
@@ -74,7 +75,6 @@ namespace HelloTogglebot
                             };
                         })
                         .AddHttpClientInstrumentation()
-                        .AddConsoleExporter()
                         .AddOtlpExporter(options =>
                         {
                             options.Endpoint = new Uri(DynatraceConfiguration.GetOtlpEndpoint());

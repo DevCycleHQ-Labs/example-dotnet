@@ -6,19 +6,24 @@ namespace HelloTogglebot.Hooks
     public class DynatraceSpanHook : EvalHook
     {
         private readonly IOneAgentSdk oneAgentSdk;
+        private ThreadLocal<ITracer> currentTracer;
 
         public DynatraceSpanHook(IOneAgentSdk oneAgentSdk)
         {
             this.oneAgentSdk = oneAgentSdk;
+            this.currentTracer = new ThreadLocal<ITracer>();
         }
 
         public override async Task<HookContext<T>> BeforeAsync<T>(HookContext<T> context, CancellationToken cancellationToken = default)
         {
-            oneAgentSdk.TraceIncomingRemoteCall(
-                $"feature_flag_evaluation.{context.Key}",
-                "DevCycle",
-                "feature_flag_evaluation"
+            // since there are no custom tracers in C# oneAgentSdk, outgoing webrequest is closest
+            this.currentTracer.Value = (ITracer)oneAgentSdk.TraceIncomingRemoteCall(
+            "VariableAsync",
+            "DevCycle.SDK",
+            $"feature_flag_evaluation.{context.Key}"
             );
+
+            this.currentTracer.Value.Start();
 
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.key", context.Key);
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.provider.name", "devcycle");
@@ -41,11 +46,14 @@ namespace HelloTogglebot.Hooks
 
         public override Task AfterAsync<T>(HookContext<T> context, Variable<T> variableDetails, VariableMetadata variableMetadata, CancellationToken cancellationToken = default)
         {
-            oneAgentSdk.AddCustomRequestAttribute("feature_flag.set.id", variableMetadata.FeatureId);
-            oneAgentSdk.AddCustomRequestAttribute("feature_flag.url", $"https://app.devcycle.com/r/p/{context.Metadata.Project.Id}/f/{variableMetadata.FeatureId}");
 
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.result.reason", variableDetails.Eval.Reason);
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.result.reason.details", variableDetails.Eval.Details);
+            if (variableDetails.IsDefaulted == false)
+            {
+                oneAgentSdk.AddCustomRequestAttribute("feature_flag.set.id", variableMetadata.FeatureId);
+                oneAgentSdk.AddCustomRequestAttribute("feature_flag.url", $"https://app.devcycle.com/r/p/{context.Metadata.Project.Id}/f/{variableMetadata.FeatureId}");
+            }
             return Task.CompletedTask;
         }
 
@@ -58,6 +66,7 @@ namespace HelloTogglebot.Hooks
 
         public override Task FinallyAsync<T>(HookContext<T> context, Variable<T> variableDetails, VariableMetadata variableMetadata, CancellationToken cancellationToken = default)
         {
+            this.currentTracer.Value?.End();
             return Task.CompletedTask;
         }
     }

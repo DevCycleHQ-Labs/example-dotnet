@@ -30,6 +30,11 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: DYNATRACE_API_TOKEN
+        - name: DT_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DYNATRACE_ENDPOINT
         - name: DEVCYCLE_SERVER_SDK_KEY
           valueFrom:
             secretKeyRef:

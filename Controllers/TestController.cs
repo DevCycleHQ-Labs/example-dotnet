@@ -20,20 +20,18 @@ public class TestController : ControllerBase
     }
 
     [HttpGet("trace")]
-    public IActionResult TestTrace()
+    public async Task<IActionResult> TestTraceAsync()
     {
-        using var activity = ActivitySource.StartActivity("TestController.TestTrace");
 
-        _logger.LogInformation("Test trace endpoint called - Activity: {ActivityId}", activity?.Id);
-
-        activity?.SetTag("test.endpoint", "trace");
-        activity?.SetTag("test.timestamp", DateTimeOffset.UtcNow.ToString());
+        var client = DevCycleClient.GetClient();
+        var user = new DevCycleUser("userId");
+        var variable = await client.VariableAsync(user, "test", false);
 
         return Ok(new
         {
             message = "Test trace created",
-            activityId = activity?.Id,
-            timestamp = DateTimeOffset.UtcNow
+            timestamp = DateTimeOffset.UtcNow,
+            variable = variable
         });
     }
 
