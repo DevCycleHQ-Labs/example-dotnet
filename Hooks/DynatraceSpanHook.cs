@@ -6,12 +6,12 @@ namespace HelloTogglebot.Hooks
     public class DynatraceSpanHook : EvalHook
     {
         private readonly IOneAgentSdk oneAgentSdk;
-        private ThreadLocal<ITracer> currentTracer;
+        private readonly AsyncLocal<ITracer> currentTracer;
 
         public DynatraceSpanHook(IOneAgentSdk oneAgentSdk)
         {
             this.oneAgentSdk = oneAgentSdk;
-            this.currentTracer = new ThreadLocal<ITracer>();
+            this.currentTracer = new AsyncLocal<ITracer>();
         }
 
         public override async Task<HookContext<T>> BeforeAsync<T>(HookContext<T> context, CancellationToken cancellationToken = default)
@@ -49,7 +49,7 @@ namespace HelloTogglebot.Hooks
 
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.result.reason", variableDetails.Eval.Reason);
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.result.reason.details", variableDetails.Eval.Details);
-            if (variableMetadata != null)
+            if (variableMetadata?.FeatureId != null)
             {
                 oneAgentSdk.AddCustomRequestAttribute("feature_flag.set.id", variableMetadata.FeatureId);
                 oneAgentSdk.AddCustomRequestAttribute("feature_flag.url", $"https://app.devcycle.com/r/p/{context.Metadata.Project.Id}/f/{variableMetadata.FeatureId}");

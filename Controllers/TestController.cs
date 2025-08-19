@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using OpenTelemetry.Trace;
 using Dynatrace.OneAgent.Sdk.Api;
 using DevCycle.SDK.Server.Common.Model;
 
@@ -26,6 +24,9 @@ public class TestController : ControllerBase
         var client = DevCycleClient.GetClient();
         var user = new DevCycleUser("userId");
         var variable = await client.VariableAsync(user, "test", false);
+        var variable2 = await client.VariableAsync(user, "test2", false);
+        var variable3 = await client.VariableAsync(user, "test", false);
+        var variable4 = await client.VariableAsync(user, "test4", true);
 
         return Ok(new
         {
@@ -43,6 +44,9 @@ public class TestController : ControllerBase
         var client = DevCycleClient.GetClient();
         var user = new DevCycleUser("userId");
         var variable = await client.VariableAsync(user, "test", false);
+        var variable2 = await client.VariableAsync(user, "test2", false);
+        var variable3 = await client.VariableAsync(user, "test", false);
+        var variable4 = await client.VariableAsync(user, "test4", true);
 
         return Ok(new
         {
