@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 using DevCycle.SDK.Server.Local.Api;
 using DevCycle.SDK.Server.Common.Model;
@@ -10,9 +8,6 @@ namespace HelloTogglebot.Pages;
 
 public class IndexModel : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
-    private static readonly ActivitySource ActivitySource = new("HelloTogglebot.Pages");
-
     public string Speed { get; private set; } = "off";
     public bool Wink { get; private set; } = false;
 
@@ -23,16 +18,12 @@ public class IndexModel : PageModel
     public string Header { get; private set; } = "";
     public string Body { get; private set; } = "";
 
-    public IndexModel(ILogger<IndexModel> logger)
+    public IndexModel()
     {
-        _logger = logger;
     }
 
     public async void OnGet()
     {
-        using var activity = ActivitySource.StartActivity("IndexModel.OnGet");
-        _logger.LogInformation("Starting OnGet method - Activity: {ActivityId}", activity?.Id);
-
         // Get the user defined on the request context
         DevCycleUser? user = (DevCycleUser?)HttpContext.Items["user"];
 
