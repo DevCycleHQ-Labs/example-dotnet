@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using DevCycle.SDK.Server.Common.Model;
 
 namespace HelloTogglebot.Hooks

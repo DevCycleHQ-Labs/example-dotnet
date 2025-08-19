@@ -35,21 +35,6 @@ public class TestController : ControllerBase
         });
     }
 
-    [HttpPost("flush")]
-    public IActionResult FlushTraces([FromServices] TracerProvider? tracerProvider)
-    {
-        _logger.LogInformation("Manually flushing traces...");
-
-        var result = tracerProvider?.ForceFlush(5000);
-
-        return Ok(new
-        {
-            message = "Traces flushed",
-            success = result,
-            timestamp = DateTimeOffset.UtcNow
-        });
-    }
-
     [HttpGet("oneagent")]
     public async Task<IActionResult> TestOneAgentAsync([FromServices] IOneAgentSdk oneAgent)
     {

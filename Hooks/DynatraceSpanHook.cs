@@ -49,7 +49,7 @@ namespace HelloTogglebot.Hooks
 
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.result.reason", variableDetails.Eval.Reason);
             oneAgentSdk.AddCustomRequestAttribute("feature_flag.result.reason.details", variableDetails.Eval.Details);
-            if (variableDetails.IsDefaulted == false)
+            if (variableMetadata != null)
             {
                 oneAgentSdk.AddCustomRequestAttribute("feature_flag.set.id", variableMetadata.FeatureId);
                 oneAgentSdk.AddCustomRequestAttribute("feature_flag.url", $"https://app.devcycle.com/r/p/{context.Metadata.Project.Id}/f/{variableMetadata.FeatureId}");
