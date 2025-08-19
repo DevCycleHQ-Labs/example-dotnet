@@ -1,9 +1,11 @@
 namespace HelloTogglebot
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Hosting;
+
     using OpenTelemetry;
     using OpenTelemetry.Trace;
     using OpenTelemetry.Exporter;
@@ -13,18 +15,54 @@ namespace HelloTogglebot
     {
         public static void Configure(WebApplicationBuilder builder)
         {
-            if (DynatraceConfiguration.IsConfigured)
+            // Check if OpenTelemetry is enabled
+            var otelEnabled = Environment.GetEnvironmentVariable("OTEL_ENABLED");
+            if (string.IsNullOrEmpty(otelEnabled) || !bool.TryParse(otelEnabled, out var enabled) || !enabled)
             {
-                Console.WriteLine($"Dynatrace configured - Service: {DynatraceConfiguration.ServiceName}, Endpoint: {DynatraceConfiguration.GetOtlpEndpoint()}");
+                Console.WriteLine("OpenTelemetry disabled (OTEL_ENABLED not set to true).");
+                return;
+            }
 
-                builder.Services.AddOpenTelemetry()
-                    .ConfigureResource(resource => resource
-                        .AddService(
-                            serviceName: DynatraceConfiguration.ServiceName,
-                            serviceVersion: DynatraceConfiguration.ServiceVersion))
-                    .WithTracing(tracing => tracing
-                        .AddSource("HelloTogglebot.Pages")
-                        .AddSource("HelloTogglebot.Test")
+            var serviceName = Environment.GetEnvironmentVariable("OTEL_SERVICE_NAME") ?? "HelloTogglebot";
+            var serviceVersion = Environment.GetEnvironmentVariable("OTEL_SERVICE_VERSION") ?? "1.0.0";
+            var otlpEndpoint = GetOtlpEndpointFromEnv();
+            var headers = GetHeadersFromEnv();
+            var tracingSources = new[] { "HelloTogglebot.Pages", "HelloTogglebot.Test" };
+
+            if (string.IsNullOrEmpty(otlpEndpoint))
+            {
+                Console.WriteLine("OpenTelemetry endpoint not configured. Tracing disabled.");
+                return;
+            }
+
+            Configure(builder, serviceName, serviceVersion, otlpEndpoint, headers, tracingSources);
+        }
+
+        public static void Configure(WebApplicationBuilder builder,
+            string serviceName,
+            string serviceVersion,
+            string otlpEndpoint,
+            Dictionary<string, string> headers,
+            string[] tracingSources)
+        {
+            Console.WriteLine($"OpenTelemetry configured - Service: {serviceName}, Endpoint: {otlpEndpoint}");
+
+            builder.Services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource
+                    .AddService(
+                        serviceName: serviceName,
+                        serviceVersion: serviceVersion))
+                .WithTracing(tracing =>
+                {
+                    var tracingBuilder = tracing;
+
+                    // Add custom sources
+                    foreach (var source in tracingSources)
+                    {
+                        tracingBuilder = tracingBuilder.AddSource(source);
+                    }
+
+                    tracingBuilder
                         .AddAspNetCoreInstrumentation(options =>
                         {
                             options.RecordException = true;
@@ -44,30 +82,57 @@ namespace HelloTogglebot
                         .AddHttpClientInstrumentation()
                         .AddOtlpExporter(options =>
                         {
-                            options.Endpoint = new Uri(DynatraceConfiguration.GetOtlpEndpoint());
+                            options.Endpoint = new Uri(otlpEndpoint);
                             options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
-                            options.Headers = string.Join(",",
-                                DynatraceConfiguration.GetHeaders()
-                                    .Select(kvp => $"{kvp.Key}={kvp.Value}"));
+                            if (headers.Any())
+                            {
+                                options.Headers = string.Join(",", headers.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+                            }
                             options.TimeoutMilliseconds = 5000;
                             Console.WriteLine($"OTLP Exporter configured - Endpoint: {options.Endpoint}, Headers: {options.Headers}");
-                        }));
-            }
-            else
-            {
-                Console.WriteLine("Dynatrace configuration not found. Tracing disabled.");
-            }
+                        });
+                });
         }
 
-        public static void ConfigureShutdown(WebApplication app)
+
+
+        private static string? GetOtlpEndpointFromEnv()
         {
-            // Ensure spans are flushed on shutdown
-            var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-            lifetime.ApplicationStopping.Register(() =>
+            var endpoint = Environment.GetEnvironmentVariable("DT_ENDPOINT");
+            if (string.IsNullOrEmpty(endpoint))
             {
-                Console.WriteLine("Flushing OpenTelemetry spans...");
-                app.Services.GetService<TracerProvider>()?.ForceFlush(5000);
-            });
+                return Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+            }
+
+            return $"{endpoint.TrimEnd('/')}/api/v2/otlp/v1/traces";
+        }
+
+        private static Dictionary<string, string> GetHeadersFromEnv()
+        {
+            var headers = new Dictionary<string, string>();
+
+            // Check for Dynatrace API token
+            var dtApiToken = Environment.GetEnvironmentVariable("DT_API_TOKEN");
+            if (!string.IsNullOrEmpty(dtApiToken))
+            {
+                headers["Authorization"] = $"Api-Token {dtApiToken}";
+            }
+
+            // Check for generic OTEL headers
+            var otelHeaders = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS");
+            if (!string.IsNullOrEmpty(otelHeaders))
+            {
+                foreach (var header in otelHeaders.Split(','))
+                {
+                    var parts = header.Split('=', 2);
+                    if (parts.Length == 2)
+                    {
+                        headers[parts[0].Trim()] = parts[1].Trim();
+                    }
+                }
+            }
+
+            return headers;
         }
     }
 }

@@ -69,9 +69,6 @@ namespace HelloTogglebot
 
             VariationLogger.Start();
 
-            // Configure OpenTelemetry shutdown
-            OpenTelemetryConfiguration.ConfigureShutdown(app);
-
             app.Run();
         }
     }
