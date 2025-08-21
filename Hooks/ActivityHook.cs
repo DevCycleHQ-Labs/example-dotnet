@@ -23,16 +23,14 @@ namespace HelloTogglebot.Hooks
 
             if (activity != null)
             {
-                activity
-                    .SetTag("feature_flag.key", context.Key)
-                    .SetTag("feature_flag.provider.name", "devcycle")
-                    .SetTag("feature_flag.context.id", context.User.UserId);
+                activity.SetTag("feature_flag.key", context.Key);
+                activity.SetTag("feature_flag.provider.name", "devcycle");
+                activity.SetTag("feature_flag.context.id", context.User.UserId);
 
                 if (context.Metadata != null)
                 {
-                    activity
-                        .SetTag("feature_flag.project", context.Metadata.Project?.Id)
-                        .SetTag("feature_flag.environment", context.Metadata.Environment?.Id);
+                    activity.SetTag("feature_flag.project", context.Metadata.Project?.Id);
+                    activity.SetTag("feature_flag.environment", context.Metadata.Environment?.Id);
                 }
             }
 
@@ -69,7 +67,6 @@ namespace HelloTogglebot.Hooks
 
         public override Task FinallyAsync<T>(HookContext<T> context, Variable<T> variableDetails, VariableMetadata variableMetadata, CancellationToken cancellationToken = default)
         {
-            Activity.Current?.Stop();
             Activity.Current?.Dispose();
             return Task.CompletedTask;
         }
