@@ -66,7 +66,7 @@ namespace HelloTogglebot
                 await next();
             });
 
-            VariationLogger.Start();
+            // VariationLogger.Start();
 
             app.Run();
         }
