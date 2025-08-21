@@ -58,10 +58,6 @@ namespace HelloTogglebot.Hooks
                     activity.SetTag("feature_flag.result.reason.details", variableDetails.Eval.Details);
                 }
             }
-            else
-            {
-                Console.WriteLine($"AfterAsync: could not find stored activity for key {contextKey}, falling back to Activity.Current {Activity.Current?.Id}");
-            }
             return Task.CompletedTask;
         }
 
@@ -73,12 +69,6 @@ namespace HelloTogglebot.Hooks
                 Console.WriteLine($"ErrorAsync: using stored activity {activity.Id} for key {contextKey}");
                 activity.SetTag("feature_flag.error_message", error.Message);
                 activity.SetTag("error.type", error.GetType().Name);
-            }
-            else
-            {
-                Console.WriteLine($"ErrorAsync: could not find stored activity for key {contextKey}, falling back to Activity.Current {Activity.Current?.Id}");
-                Activity.Current?.SetTag("feature_flag.error_message", error.Message);
-                Activity.Current?.SetTag("error.type", error.GetType().Name);
             }
             return Task.CompletedTask;
         }
