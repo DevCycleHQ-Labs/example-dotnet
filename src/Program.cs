@@ -6,9 +6,10 @@ namespace HelloTogglebot
     using DevCycle.SDK.Server.Common.Model;
 
     using System.Diagnostics;
-    using Dynatrace.OneAgent.Sdk.Api;
+    // using Dynatrace.OneAgent.Sdk.Api;
 
     using HelloTogglebot.Hooks;
+    using Dynatrace.OneAgent.Sdk.Api;
 
     public class Program
     {
@@ -32,11 +33,11 @@ namespace HelloTogglebot
             Console.WriteLine($"OneAgent SDK initialized - State: {oneAgentSdk.CurrentState}");
 
             var client = DevCycleClient.GetClient();
-            client.AddEvalHook(new DynatraceSpanHook(oneAgentSdk));
+            // client.AddEvalHook(new DynatraceSpanHook(oneAgentSdk));
             client.AddEvalHook(new ActivityHook(new ActivitySource("HelloPaulTest")));
 
             // Configure OpenTelemetry
-            OpenTelemetryConfiguration.Configure(builder);
+            OtelConfiguration.Configure(builder);
 
             var app = builder.Build();
 

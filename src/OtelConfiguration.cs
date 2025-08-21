@@ -11,7 +11,7 @@ namespace HelloTogglebot
     using OpenTelemetry.Exporter;
     using OpenTelemetry.Resources;
 
-    public static class OpenTelemetryConfiguration
+    public static class OtelConfiguration
     {
         public static void Configure(WebApplicationBuilder builder)
         {
