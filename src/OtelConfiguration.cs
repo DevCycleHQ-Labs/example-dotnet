@@ -27,7 +27,7 @@ namespace HelloTogglebot
             var serviceVersion = Environment.GetEnvironmentVariable("OTEL_SERVICE_VERSION") ?? "1.0.0";
             var otlpEndpoint = GetOtlpEndpointFromEnv();
             var headers = GetHeadersFromEnv();
-            var tracingSources = new[] { "HelloTogglebot.Pages", "HelloTogglebot.Test" };
+            var tracingSources = new[] { "HelloTogglebot.Pages", "HelloTogglebot.Test", "HelloTogglebot.FeatureFlags" };
 
             if (string.IsNullOrEmpty(otlpEndpoint))
             {

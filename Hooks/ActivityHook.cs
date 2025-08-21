@@ -23,6 +23,7 @@ namespace HelloTogglebot.Hooks
 
             if (activity != null)
             {
+                Console.WriteLine($"found activity {activity.Id}");
                 activity.SetTag("feature_flag.key", context.Key);
                 activity.SetTag("feature_flag.provider.name", "devcycle");
                 activity.SetTag("feature_flag.context.id", context.User.UserId);
@@ -67,7 +68,7 @@ namespace HelloTogglebot.Hooks
 
         public override Task FinallyAsync<T>(HookContext<T> context, Variable<T> variableDetails, VariableMetadata variableMetadata, CancellationToken cancellationToken = default)
         {
-            Activity.Current?.Dispose();
+            Console.WriteLine($"finally for {Activity.Current?.Id} for key {variableDetails.Key}");
             return Task.CompletedTask;
         }
     }
