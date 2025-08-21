@@ -35,7 +35,7 @@ namespace HelloTogglebot
             client.AddEvalHook(new ActivityHook(new ActivitySource("DevCycle.FlagEvaluations")));
 
             // Configure OpenTelemetry
-            OtelConfiguration.Configure(builder);
+            // OtelConfiguration.Configure(builder);
 
             var app = builder.Build();
 
