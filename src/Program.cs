@@ -34,7 +34,7 @@ namespace HelloTogglebot
 
             var client = DevCycleClient.GetClient();
             // client.AddEvalHook(new DynatraceSpanHook(oneAgentSdk));
-            client.AddEvalHook(new ActivityHook(new ActivitySource("HelloTogglebot.FeatureFlags")));
+            client.AddEvalHook(new ActivityHook(new ActivitySource("DevCycle.FlagEvaluations")));
 
             // Configure OpenTelemetry
             OtelConfiguration.Configure(builder);
