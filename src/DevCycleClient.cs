@@ -26,25 +26,33 @@ namespace HelloTogglebot
                 .SetOptions(
                     new DevCycleLocalOptions(configPollingIntervalMs: 5000, eventFlushIntervalMs: 1000)
                 )
-                .SetInitializedSubscriber((o, e) => {
-                    if (e.Success) {
+                .SetInitializedSubscriber((o, e) =>
+                {
+                    if (e.Success)
+                    {
                         initialized = true;
-                    } else {
+                    }
+                    else
+                    {
                         Console.WriteLine($"DevCycle Client did not initialize. Errors: {e.Errors}");
                     }
                 })
                 .Build();
 
-            try {
+            try
+            {
                 await Task.Delay(5000);
-            } catch (TaskCanceledException) {
+            }
+            catch (TaskCanceledException)
+            {
                 System.Environment.Exit(0);
             }
         }
 
         public static DevCycleLocalClient GetClient()
         {
-            if (!initialized || client == null) {
+            if (!initialized || client == null)
+            {
                 throw new Exception("DevCycle Client not initialized");
             }
             return client;

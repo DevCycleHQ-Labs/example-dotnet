@@ -5,10 +5,9 @@ namespace HelloTogglebot
     using Microsoft.Extensions.DependencyInjection;
     using DevCycle.SDK.Server.Common.Model;
 
-    using System.Diagnostics;
-
     using HelloTogglebot.Hooks;
     using Dynatrace.OneAgent.Sdk.Api;
+    using OpenTelemetry.Logs;
 
     public class Program
     {
@@ -22,6 +21,17 @@ namespace HelloTogglebot
 
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Logging.AddOpenTelemetry(opt =>
+            {
+                opt.IncludeFormattedMessage = true; // Include the formatted log message
+                opt.IncludeScopes = true; // Include scope information
+                opt.ParseStateValues = true; // Enable structured log parsing;
+                opt.AddOtlpExporter(options =>
+                {
+                    options.Endpoint = new Uri("https://xtc47953.live.dynatrace.com/api/v2/otlp/v1/logs");
+                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
+                });
+            });
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddControllers();
@@ -31,13 +41,14 @@ namespace HelloTogglebot
             builder.Services.AddSingleton<IOneAgentSdk>(oneAgentSdk);
             Console.WriteLine($"OneAgent SDK initialized - State: {oneAgentSdk.CurrentState}");
 
-            var client = DevCycleClient.GetClient();
-            client.AddEvalHook(new ActivityHook(new ActivitySource("DevCycle.FlagEvaluations")));
 
-            // Configure OpenTelemetry
-            // OtelConfiguration.Configure(builder);
-
+            OtelConfiguration.Configure(builder);
             var app = builder.Build();
+
+            var client = DevCycleClient.GetClient();
+            // client.AddEvalHook(new ActivityHook(new ActivitySource("DevCycle.FlagEvaluations")));
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            client.AddEvalHook(new LogHook(logger));
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
